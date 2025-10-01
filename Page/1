@@ -1,0 +1,56 @@
+import streamlit as st
+import yfinance as yf
+import pandas as pd
+import datetime
+import matplotlib.pyplot as plt
+
+st.set_page_config(page_title="Global Top 10 Companies Stock Visualization", layout="wide")
+
+st.title("📈 글로벌 Top 10 기업 최근 주가 변화")
+st.write("데이터 출처: Yahoo Finance (yfinance)")
+
+# 글로벌 시가총액 상위 10개 기업 (2025년 기준 예시)
+companies = {
+    "Apple": "AAPL",
+    "Microsoft": "MSFT",
+    "NVIDIA": "NVDA",
+    "Alphabet (Google)": "GOOGL",
+    "Amazon": "AMZN",
+    "Meta (Facebook)": "META",
+    "Tesla": "TSLA",
+    "Berkshire Hathaway": "BRK-B",
+    "TSMC": "TSM",
+    "Exxon Mobil": "XOM"
+}
+
+# 기간 설정
+end = datetime.date.today()
+start = end - datetime.timedelta(days=365*3)  # 최근 3년
+
+st.sidebar.header("설정")
+selected_companies = st.sidebar.multiselect(
+    "기업 선택",
+    options=list(companies.keys()),
+    default=list(companies.keys())
+)
+
+# 데이터 불러오기
+if selected_companies:
+    data = yf.download([companies[c] for c in selected_companies], start=start, end=end)["Adj Close"]
+    
+    # 라인 차트 그리기
+    st.subheader("📊 주가 추이 (조정 종가 기준)")
+    st.line_chart(data)
+
+    # 기업별 상세 개별 차트
+    st.subheader("📉 개별 기업 주가 변화")
+    for c in selected_companies:
+        st.write(f"### {c} ({companies[c]})")
+        fig, ax = plt.subplots(figsize=(8, 4))
+        data[companies[c]].plot(ax=ax)
+        ax.set_title(f"{c} 주가 추이")
+        ax.set_xlabel("날짜")
+        ax.set_ylabel("주가 (USD)")
+        st.pyplot(fig)
+else:
+    st.warning("좌측 사이드바에서 기업을 선택하세요.")
